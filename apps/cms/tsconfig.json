@@ -10,8 +10,9 @@
     "baseUrl": "./",
     "rootDir": "./",
     "types": ["node"],
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
+    "allowJs": true
   },
-  "include": ["./scripts/**/*.ts"],
+  "include": ["./scripts/**/*"],
   "exclude": ["node_modules", "build", "dist"]
 }
