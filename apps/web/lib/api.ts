@@ -69,13 +69,23 @@ const buildUrl = (path: string, params?: Record<string, any>) => {
 
 const fetchAPI = async <T>(path: string, params?: Record<string, any>) => {
   const url = buildUrl(path, params);
-  const res = await fetch(url, defaultOptions);
-  if (!res.ok) {
-    console.error(await res.text());
-    throw new Error(`Error al consultar ${url}`);
+  const fallbackResponse = {
+    data: null as unknown as StrapiEntry<T>[] | StrapiEntry<T>,
+  };
+
+  try {
+    const res = await fetch(url, defaultOptions);
+    if (!res.ok) {
+      const errorMessage = await res.text().catch(() => res.statusText);
+      console.error(errorMessage || `Error al consultar ${url}`);
+      return fallbackResponse;
+    }
+    const json = await res.json();
+    return json as { data: StrapiEntry<T>[] | StrapiEntry<T> };
+  } catch (error) {
+    console.error(`Error al consultar ${url}`, error);
+    return fallbackResponse;
   }
-  const json = await res.json();
-  return json as { data: StrapiEntry<T>[] | StrapiEntry<T> };
 };
 
 export const getHome = async () => {
