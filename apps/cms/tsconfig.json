@@ -13,6 +13,6 @@
     "resolveJsonModule": true,
     "allowJs": true
   },
-  "include": ["./scripts/**/*"],
+  "include": ["./scripts/**/*.js"],
   "exclude": ["node_modules", "build", "dist"]
 }
