@@ -46,9 +46,27 @@ const ensurePublicPermissions = async (strapi: Core.Strapi) => {
   });
 };
 
+const ensureSingleTypeEntries = async (
+  strapi: Core.Strapi,
+  singleTypeUids: string[],
+) => {
+  await Promise.all(
+    singleTypeUids.map(async (uid) => {
+      const existingEntry = await strapi.db
+        .query(uid)
+        .findOne({ select: ["id"] });
+
+      if (!existingEntry) {
+        await strapi.entityService.create(uid, { data: {} });
+      }
+    }),
+  );
+};
+
 export default {
   register() {},
   async bootstrap({ strapi }: { strapi: Core.Strapi }) {
     await ensurePublicPermissions(strapi);
+    await ensureSingleTypeEntries(strapi, ["api::home.home"]);
   },
 };
