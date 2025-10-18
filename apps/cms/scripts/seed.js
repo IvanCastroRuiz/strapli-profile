@@ -1,4 +1,7 @@
-import { createStrapi } from "@strapi/strapi";
+import { createRequire } from "node:module";
+
+const require = createRequire(import.meta.url);
+const { createStrapi } = require("@strapi/strapi");
 
 const categories = [
   { nombre: "Bodas", slug: "bodas", descripcion: "Celebraciones nupciales con una estética moderna y elegante." },
