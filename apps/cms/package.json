@@ -10,7 +10,7 @@
     "develop": "strapi develop",
     "build": "strapi build",
     "start": "strapi start",
-    "seed": "tsx ./scripts/seed.ts"
+    "seed": "node ./scripts/seed.js"
   },
   "dependencies": {
     "@strapi/plugin-graphql": "^5.0.4",
