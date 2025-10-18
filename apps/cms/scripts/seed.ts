@@ -1,4 +1,6 @@
 import { createStrapi } from "@strapi/strapi";
+import type { UID } from '@strapi/types';
+type ID = string | number;
 
 const categories = [
   { nombre: "Bodas", slug: "bodas", descripcion: "Celebraciones nupciales con una estética moderna y elegante." },
@@ -141,19 +143,19 @@ const seed = async () => {
   await strapi.start();
 
   try {
-    const categoryMap = new Map<string, number>();
+    const categoryMap = new Map<string, ID>();
     for (const category of categories) {
       const id = await upsertCollectionEntry(strapi, "api::categoria.categoria", category.slug, category);
       categoryMap.set(category.slug, id);
     }
 
-    const tagMap = new Map<string, number>();
+    const tagMap = new Map<string, ID>();
     for (const tag of tags) {
       const id = await upsertCollectionEntry(strapi, "api::tag.tag", tag.slug, tag);
       tagMap.set(tag.slug, id);
     }
 
-    const authorMap = new Map<string, number>();
+    const authorMap = new Map<string, ID>();
     for (const author of authors) {
       const id = await upsertCollectionEntry(strapi, "api::autor.autor", author.slug, {
         nombre: author.nombre,
@@ -163,7 +165,7 @@ const seed = async () => {
       authorMap.set(author.slug, id);
     }
 
-    const designMap = new Map<string, number>();
+    const designMap = new Map<string, ID>();
     for (const design of designs) {
       const existing = await strapi.entityService.findMany("api::diseno.diseno", {
         filters: { slug: design.slug },
@@ -201,23 +203,32 @@ const seed = async () => {
       designMap.set(design.slug, entity.id);
     }
 
-    await strapi.entityService.createOrUpdate("api::home.home", {
-      data: {
-        destacados: Array.from(designMap.values()),
-      },
+    const upsertSingle = async (uid: UID.ContentType, data: any) => {
+      // Query Engine sí acepta limit de forma fiable
+      const existing = await strapi.db.query(uid).findMany({
+        select: ['id'],
+        limit: 1,
+      } as any); // <- el "as any" evita choques por cambios menores de typings
+
+      if (existing && existing.length > 0) {
+        return strapi.entityService.update(uid, existing[0].id as ID, { data });
+      }
+
+      return strapi.entityService.create(uid, { data });
+    };
+
+    await upsertSingle('api::home.home' as UID.ContentType, {
+      destacados: Array.from(designMap.values()),
     });
 
-    await strapi.entityService.createOrUpdate("api::ajuste.ajuste", {
-      data: {
-        cta_whatsapp: "573001234567",
-        colores: {
-          fondo: "#0B0B0C",
-          acento: "#C9A25E",
-        },
-        redes: {
-          instagram: "https://instagram.com/estudioeditorial",
-          pinterest: "https://pinterest.com/estudioeditorial",
-        },
+    // OJO: usa el UID que realmente creaste en el Content-Type Builder.
+    // Si tu single se llama "ajustes" en plural:
+    await upsertSingle('api::ajustes.ajustes' as UID.ContentType, {
+      cta_whatsapp: '573001234567',
+      colores: { fondo: '#0B0B0C', acento: '#C9A25E' },
+      redes: {
+        instagram: 'https://instagram.com/estudioeditorial',
+        pinterest: 'https://pinterest.com/estudioeditorial',
       },
     });
 
