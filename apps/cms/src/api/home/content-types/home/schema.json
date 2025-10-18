@@ -1,0 +1,24 @@
+{
+  "kind": "singleType",
+  "collectionName": "home",
+  "info": {
+    "singularName": "home",
+    "pluralName": "homes",
+    "displayName": "Home"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "attributes": {
+    "hero": {
+      "type": "media",
+      "multiple": false,
+      "required": false
+    },
+    "destacados": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::diseno.diseno"
+    }
+  }
+}

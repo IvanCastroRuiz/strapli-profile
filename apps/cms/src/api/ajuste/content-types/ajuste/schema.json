@@ -1,0 +1,27 @@
+{
+  "kind": "singleType",
+  "collectionName": "ajustes",
+  "info": {
+    "singularName": "ajuste",
+    "pluralName": "ajustes",
+    "displayName": "Ajustes"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "attributes": {
+    "logo": {
+      "type": "media",
+      "multiple": false
+    },
+    "redes": {
+      "type": "json"
+    },
+    "colores": {
+      "type": "json"
+    },
+    "cta_whatsapp": {
+      "type": "string"
+    }
+  }
+}

@@ -1,0 +1,46 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg: #0B0B0C;
+  --surface: #121214;
+  --text: #F5F6F7;
+  --muted: #C9CCD1;
+  --accent: #C9A25E;
+  --accent-2: #9E7C41;
+  --line: #2A2A2D;
+  --chip: #1A1A1D;
+  --focus: #E8D7B0;
+}
+
+html {
+  color-scheme: dark;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-inter);
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+a:hover {
+  text-decoration: underline;
+  text-decoration-color: var(--accent);
+  text-underline-offset: 3px;
+}
+
+::selection {
+  background: rgba(201, 162, 94, 0.35);
+  color: var(--text);
+}
+
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 4px;
+}

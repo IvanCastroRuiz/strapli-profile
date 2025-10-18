@@ -1,0 +1,13 @@
+{
+  "name": "portafolio-editorial-modern",
+  "private": true,
+  "packageManager": "pnpm@8",
+  "scripts": {
+    "cms:develop": "pnpm -C apps/cms develop",
+    "cms:build": "pnpm -C apps/cms build",
+    "cms:start": "pnpm -C apps/cms start",
+    "web:dev": "pnpm -C apps/web dev",
+    "web:build": "pnpm -C apps/web build",
+    "web:start": "pnpm -C apps/web start"
+  }
+}

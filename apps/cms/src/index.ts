@@ -1,0 +1,54 @@
+import type { Core } from "@strapi/strapi";
+
+const PUBLIC_ROLE_ID = 1;
+
+const publicPermissions: Record<string, string[]> = {
+  "api::categoria.categoria": ["find", "findOne"],
+  "api::diseno.diseno": ["find", "findOne"],
+  "api::home.home": ["find", "findOne"],
+  "api::ajuste.ajuste": ["find", "findOne"],
+  "api::tag.tag": ["find", "findOne"],
+  "api::autor.autor": ["find", "findOne"],
+};
+
+const buildPermissionPayload = (uid: string, actions: string[]) => {
+  const parts = uid.split(".");
+  const name = parts[parts.length - 1];
+  return {
+    [uid]: {
+      controllers: {
+        [name]: actions.reduce<Record<string, boolean>>((acc, action) => {
+          acc[action] = true;
+          return acc;
+        }, {}),
+      },
+    },
+  };
+};
+
+const ensurePublicPermissions = async (strapi: Core.Strapi) => {
+  const roleService = strapi.service("plugin::users-permissions.role");
+  const role = await roleService.findOne(PUBLIC_ROLE_ID);
+  if (!role) {
+    return;
+  }
+
+  const permissions = Object.entries(publicPermissions).reduce(
+    (acc, [uid, actions]) => ({
+      ...acc,
+      ...buildPermissionPayload(uid, actions),
+    }),
+    {}
+  );
+
+  await roleService.updateRole(PUBLIC_ROLE_ID, {
+    permissions,
+  });
+};
+
+export default {
+  register() {},
+  async bootstrap({ strapi }: { strapi: Core.Strapi }) {
+    await ensurePublicPermissions(strapi);
+  },
+};
