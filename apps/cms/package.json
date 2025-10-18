@@ -7,10 +7,10 @@
     "uuid": "3e2f5fa5-1e23-4b55-9d4d-6b88a25b9d0d"
   },
   "scripts": {
-    "develop": "strapi develop",
-    "build": "strapi build",
-    "start": "strapi start",
-    "seed": "node ./scripts/seed.js"
+    "develop": "node --experimental-specifier-resolution=node ./node_modules/@strapi/strapi/bin/strapi.js develop",
+    "build": "node --experimental-specifier-resolution=node ./node_modules/@strapi/strapi/bin/strapi.js build",
+    "start": "node --experimental-specifier-resolution=node ./node_modules/@strapi/strapi/bin/strapi.js start",
+    "seed": "node --experimental-specifier-resolution=node ./scripts/seed.js"
   },
   "dependencies": {
     "@strapi/plugin-graphql": "^5.0.4",

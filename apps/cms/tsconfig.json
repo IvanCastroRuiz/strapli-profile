@@ -13,6 +13,7 @@
     "resolveJsonModule": true,
     "allowJs": true
   },
-  "include": ["./scripts/**/*.js"],
+  "include": ["./scripts/**/*.ts", "./scripts/**/*.js"],
+  "files": ["./scripts/seed.js"],
   "exclude": ["node_modules", "build", "dist"]
 }
