@@ -1,0 +1,11 @@
+node_modules
+.pnpm-store
+.env
+.env.local
+.strapi
+.cache
+.build
+.next
+out
+.DS_Store
+coverage

@@ -1,0 +1,28 @@
+{
+  "name": "cms",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "strapi": {
+    "uuid": "3e2f5fa5-1e23-4b55-9d4d-6b88a25b9d0d"
+  },
+  "scripts": {
+    "develop": "strapi develop",
+    "build": "strapi build",
+    "start": "strapi start",
+    "seed": "node ./scripts/seed.ts"
+  },
+  "dependencies": {
+    "@strapi/plugin-graphql": "5.0.4",
+    "@strapi/plugin-i18n": "5.0.4",
+    "@strapi/plugin-seo": "5.0.4",
+    "@strapi/provider-upload-cloudinary": "5.0.4",
+    "@strapi/strapi": "5.0.4",
+    "pg": "8.11.5"
+  },
+  "devDependencies": {
+    "@types/node": "20.11.30",
+    "ts-node": "10.9.2",
+    "typescript": "5.3.3"
+  }
+}
