@@ -1,3 +1,6 @@
+import { promises as fs } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { createRequire } from "node:module";
 
 const require = createRequire(import.meta.url);
@@ -109,20 +112,26 @@ const uploadFromCloudinary = async (strapi, publicId) => {
   const arrayBuffer = await response.arrayBuffer();
   const buffer = Buffer.from(arrayBuffer);
   const filename = `${publicId.split("/").pop()}.jpg`;
+  const tempFilePath = join(tmpdir(), `${Date.now()}-${filename}`);
 
   const uploadService = strapi.plugin("upload").service("upload");
-  const [file] = await uploadService.upload({
-    data: { folder: "portfolio" },
-    files: {
-      path: filename,
-      name: filename,
-      type: "image/jpeg",
-      size: buffer.byteLength,
-      buffer,
-    },
-  });
+  await fs.writeFile(tempFilePath, buffer);
 
-  return file.id;
+  try {
+    const [file] = await uploadService.upload({
+      data: { folder: "portfolio" },
+      files: {
+        path: tempFilePath,
+        name: filename,
+        type: "image/jpeg",
+        size: buffer.byteLength,
+      },
+    });
+
+    return file.id;
+  } finally {
+    await fs.unlink(tempFilePath).catch(() => {});
+  }
 };
 
 const upsertCollectionEntry = async (strapi, uid, slug, data) => {
