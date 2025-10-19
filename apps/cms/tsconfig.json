@@ -11,7 +11,8 @@
     "rootDir": "./",
     "types": ["node"],
     "resolveJsonModule": true,
-    "allowJs": true
+    "allowJs": true,
+    "noEmit": true
   },
   "include": ["./scripts/**/*.ts", "./scripts/**/*.js"],
   "files": ["./scripts/seed.js"],

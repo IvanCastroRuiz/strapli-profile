@@ -98,7 +98,7 @@ const designs = [
 ];
 
 const cloudinaryBase = (publicId) =>
-  `https://res.cloudinary.com/${process.env.CLOUDINARY_NAME}/image/upload/q_80,w_1600/${publicId}.jpg`;
+  `https://res.cloudinary.com/${process.env.CLOUDINARY_NAME}/image/upload/q_80,w_1600/${publicId}.avif`;
 
 const uploadFromCloudinary = async (strapi, publicId) => {
   const url = cloudinaryBase(publicId);
