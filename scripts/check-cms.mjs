@@ -1,10 +1,10 @@
 // Quick Strapi endpoint checker
-// Usage: NEXT_PUBLIC_CMS_URL=http://localhost:1337 node strapli-profile/scripts/check-cms.mjs
+// Usage: NEXT_PUBLIC_STRAPI_URL=http://localhost:1337 node strapli-profile/scripts/check-cms.mjs
 
-const CMS_URL = process.env.NEXT_PUBLIC_CMS_URL ?? "http://localhost:1337";
+const STRAPI_URL = process.env.NEXT_PUBLIC_STRAPI_URL ?? "http://localhost:1337";
 
 const build = (path, params) => {
-  const url = new URL(`/api${path}`, CMS_URL);
+  const url = new URL(`/api${path}`, STRAPI_URL);
   if (params) {
     for (const [k, v] of new URLSearchParams(params)) url.searchParams.append(k, v);
   }
@@ -33,7 +33,7 @@ async function check(url) {
 }
 
 (async () => {
-  console.log(`CMS_URL: ${CMS_URL}`);
+  console.log(`STRAPI_URL: ${STRAPI_URL}`);
   for (const e of endpoints) {
     console.log("\n==>", e.name, e.url);
     const { status, json, bodyText } = await check(e.url);
