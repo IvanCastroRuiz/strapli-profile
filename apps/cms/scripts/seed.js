@@ -207,6 +207,11 @@ const upsertCollectionEntry = async (strapi, uid, slug, data) => {
   return published?.id ?? created.id;
 };
 
+const withPublishedAt = (entry = {}) => ({
+  publishedAt: new Date().toISOString(),
+  ...entry,
+});
+
 const upsertSingle = async (strapi, uid, data) => {
   const existing = await strapi.db.query(uid).findOne({
     select: ["id", "documentId", "publishedAt"],
