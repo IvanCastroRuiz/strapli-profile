@@ -23,6 +23,7 @@ const absoluteUrl = (url?: string | null) => {
 };
 
 const normalize = <T>(entry: any): T | null => {
+  console.log("entry: ", entry)
   if (!entry) return null;
   if (Array.isArray(entry)) {
     return entry.map((item) => normalize(item)).filter(Boolean) as unknown as T;
@@ -64,6 +65,7 @@ const buildUrl = (path: string, params?: Record<string, any>) => {
     ? qs.stringify(params, { encodeValuesOnly: true })
     : "";
   const url = new URL(`/api${path}${query ? `?${query}` : ""}`, CMS_URL);
+  console.log("url: ", url.toString())
   return url.toString();
 };
 
@@ -76,8 +78,17 @@ const fetchAPI = async <T>(path: string, params?: Record<string, any>) => {
   try {
     const res = await fetch(url, defaultOptions);
     if (!res.ok) {
-      const errorMessage = await res.text().catch(() => res.statusText);
-      console.error(errorMessage || `Error al consultar ${url}`);
+      let details: any = null;
+      try {
+        details = await res.clone().json();
+      } catch {
+        // ignore json parse error
+      }
+      const bodyText = !details ? await res.text().catch(() => "") : "";
+      console.error(
+        `Error ${res.status} ${res.statusText} al consultar ${url}`,
+        details || bodyText || ""
+      );
       return fallbackResponse;
     }
     const json = await res.json();
@@ -89,7 +100,9 @@ const fetchAPI = async <T>(path: string, params?: Record<string, any>) => {
 };
 
 export const getHome = async () => {
+  //TODO:  revisar por que la respuesta es null
   const response = await fetchAPI<HomePage>("/home", { populate: "*" });
+  console.log(response)
   return normalize<HomePage>(response.data) as HomePage;
 };
 
@@ -113,6 +126,7 @@ export const getDisenos = async (filters?: Record<string, any>) => {
 };
 
 export const getDiseno = async (slug: string) => {
+  // Collection type UID is "diseno" -> REST path "/disenos"
   const response = await fetchAPI<Design[]>("/disenos", {
     populate: "*",
     filters: { slug: { $eq: slug } },
@@ -123,6 +137,7 @@ export const getDiseno = async (slug: string) => {
 };
 
 export const getAjustes = async () => {
-  const response = await fetchAPI<Ajustes>("/ajustes", { populate: "*" });
+  // Strapi single type UID is "ajuste" (not plural)
+  const response = await fetchAPI<Ajustes>("/ajuste", { populate: "*" });
   return normalize<Ajustes>(response.data) as Ajustes;
 };

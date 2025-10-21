@@ -109,9 +109,27 @@ const uploadFromCloudinary = async (strapi, publicId) => {
   if (!response.ok) {
     throw new Error(`No se pudo descargar la imagen ${url}`);
   }
+
+  // Infer mime/extension from response or URL
+  const contentType = response.headers.get("content-type") || "application/octet-stream";
+  const urlExt = (() => {
+    const afterDot = url.split(".").pop() || "";
+    return afterDot.split("?")[0].toLowerCase();
+  })();
+  const extFromType = (type) => {
+    if (type.includes("image/jpeg")) return "jpg";
+    if (type.includes("image/png")) return "png";
+    if (type.includes("image/webp")) return "webp";
+    if (type.includes("image/avif")) return "avif";
+    return urlExt || "bin";
+  };
+
+  const extension = extFromType(contentType);
+  const baseName = publicId.split("/").pop();
+  const filename = `${baseName}.${extension}`;
+
   const arrayBuffer = await response.arrayBuffer();
   const buffer = Buffer.from(arrayBuffer);
-  const filename = `${publicId.split("/").pop()}.jpg`;
   const tempFilePath = join(tmpdir(), `${Date.now()}-${filename}`);
 
   const uploadService = strapi.plugin("upload").service("upload");
@@ -121,9 +139,10 @@ const uploadFromCloudinary = async (strapi, publicId) => {
     const [file] = await uploadService.upload({
       data: { folder: "portfolio" },
       files: {
-        path: tempFilePath,
-        name: filename,
-        type: "image/jpeg",
+        // Strapi v5 expects these field names
+        filepath: tempFilePath,
+        originalFilename: filename,
+        mimetype: contentType,
         size: buffer.byteLength,
       },
     });

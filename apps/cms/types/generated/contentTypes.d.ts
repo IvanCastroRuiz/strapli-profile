@@ -579,7 +579,7 @@ export interface ApiHomeHome extends Struct.SingleTypeSchema {
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
     destacados: Schema.Attribute.Relation<'oneToMany', 'api::diseno.diseno'>;
-    hero: Schema.Attribute.Media;
+    hero: Schema.Attribute.Media<'images' | 'videos' | 'audios' | 'files'>;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<'oneToMany', 'api::home.home'> &
       Schema.Attribute.Private;

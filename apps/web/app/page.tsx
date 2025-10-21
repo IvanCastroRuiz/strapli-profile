@@ -17,6 +17,8 @@ export default async function HomePage() {
 
   const canonical = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
+  console.log("home: ",home);
+
   return (
     <div className="space-y-16">
       <Seo
