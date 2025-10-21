@@ -153,31 +153,72 @@ const uploadFromCloudinary = async (strapi, publicId) => {
   }
 };
 
-const upsertCollectionEntry = async (strapi, uid, slug, data) => {
-  const existing = await strapi.entityService.findMany(uid, {
-    filters: { slug },
-    limit: 1,
-  });
-
-  if (existing && existing.length > 0) {
-    return existing[0].id;
+const publishDocumentIfNeeded = async (strapi, uid, entry) => {
+  const contentType = strapi.contentType(uid);
+  if (!contentType?.options?.draftAndPublish) {
+    return entry;
   }
 
-  const entry = await strapi.entityService.create(uid, { data });
-  return entry.id;
+  const ensureDocumentIdentity = async (record) => {
+    if (record?.documentId && typeof record.publishedAt !== "undefined") {
+      return record;
+    }
+
+    if (!record?.id) {
+      return record ?? null;
+    }
+
+    return strapi.db.query(uid).findOne({
+      select: ["id", "documentId", "publishedAt"],
+      where: { id: record.id },
+    });
+  };
+
+  const baseEntry = await ensureDocumentIdentity(entry);
+  if (!baseEntry) {
+    return entry;
+  }
+
+  if (baseEntry.publishedAt) {
+    return baseEntry;
+  }
+
+  const result = await strapi.documents(uid).publish({
+    documentId: baseEntry.documentId,
+  });
+
+  return result.entries?.[0] ?? baseEntry;
+};
+
+const upsertCollectionEntry = async (strapi, uid, slug, data) => {
+  const existing = await strapi.db.query(uid).findOne({
+    where: { slug },
+    select: ["id", "documentId", "publishedAt"],
+  });
+
+  if (existing) {
+    await strapi.entityService.update(uid, existing.id, { data });
+    const published = await publishDocumentIfNeeded(strapi, uid, existing);
+    return published?.id ?? existing.id;
+  }
+
+  const created = await strapi.entityService.create(uid, { data });
+  const published = await publishDocumentIfNeeded(strapi, uid, created);
+  return published?.id ?? created.id;
 };
 
 const upsertSingle = async (strapi, uid, data) => {
-  const existing = await strapi.db.query(uid).findMany({
-    select: ["id"],
-    limit: 1,
+  const existing = await strapi.db.query(uid).findOne({
+    select: ["id", "documentId", "publishedAt"],
   });
 
-  if (existing && existing.length > 0) {
-    return strapi.entityService.update(uid, existing[0].id, { data });
+  if (existing) {
+    await strapi.entityService.update(uid, existing.id, { data });
+    return publishDocumentIfNeeded(strapi, uid, existing);
   }
 
-  return strapi.entityService.create(uid, { data });
+  const created = await strapi.entityService.create(uid, { data });
+  return publishDocumentIfNeeded(strapi, uid, created);
 };
 
 const seed = async () => {
@@ -209,13 +250,14 @@ const seed = async () => {
 
     const designMap = new Map();
     for (const design of designs) {
-      const existing = await strapi.entityService.findMany("api::diseno.diseno", {
-        filters: { slug: design.slug },
-        limit: 1,
+      const existing = await strapi.db.query("api::diseno.diseno").findOne({
+        where: { slug: design.slug },
+        select: ["id", "documentId", "publishedAt"],
       });
 
-      if (existing && existing.length > 0) {
-        designMap.set(design.slug, existing[0].id);
+      if (existing) {
+        const published = await publishDocumentIfNeeded(strapi, "api::diseno.diseno", existing);
+        designMap.set(design.slug, published?.id ?? existing.id);
         continue;
       }
 
@@ -242,14 +284,15 @@ const seed = async () => {
         },
       });
 
-      designMap.set(design.slug, entity.id);
+      const published = await publishDocumentIfNeeded(strapi, "api::diseno.diseno", entity);
+      designMap.set(design.slug, published?.id ?? entity.id);
     }
 
     await upsertSingle(strapi, "api::home.home", {
       destacados: Array.from(designMap.values()),
     });
 
-    await upsertSingle(strapi, "api::ajustes.ajustes", {
+    await upsertSingle(strapi, "api::ajuste.ajuste", {
       cta_whatsapp: "573001234567",
       colores: { fondo: "#0B0B0C", acento: "#C9A25E" },
       redes: {
