@@ -52,20 +52,37 @@ const ensureSingleTypeEntries = async (
 ) => {
   await Promise.all(
     singleTypeUids.map(async (uid) => {
+      const contentType = strapi.contentType(uid);
+      const hasDraftAndPublish = contentType?.options?.draftAndPublish === true;
+
       const existingEntry = await strapi.db
         .query(uid)
-        .findOne({ select: ["id", "publishedAt"] });
+        .findOne({ select: ["id", "documentId", "publishedAt"] });
 
       if (!existingEntry) {
-        await strapi.entityService.create(uid, {
-          data: { publishedAt: new Date().toISOString() },
-        });
+        const created = await strapi.entityService.create(uid, { data: {} });
+
+        if (hasDraftAndPublish) {
+          const documentId =
+            created?.documentId ??
+            (await strapi.db
+              .query(uid)
+              .findOne({
+                select: ["documentId"],
+                where: { id: created.id },
+              }))?.documentId;
+
+          if (documentId) {
+            await strapi.documents(uid).publish({ documentId });
+          }
+        }
+
         return;
       }
 
-      if (!existingEntry.publishedAt) {
-        await strapi.entityService.update(uid, existingEntry.id, {
-          data: { publishedAt: new Date().toISOString() },
+      if (hasDraftAndPublish && !existingEntry.publishedAt) {
+        await strapi.documents(uid).publish({
+          documentId: existingEntry.documentId,
         });
       }
     }),
