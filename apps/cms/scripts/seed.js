@@ -167,17 +167,24 @@ const upsertCollectionEntry = async (strapi, uid, slug, data) => {
   return entry.id;
 };
 
+const withPublishedAt = (entry = {}) => ({
+  publishedAt: new Date().toISOString(),
+  ...entry,
+});
+
 const upsertSingle = async (strapi, uid, data) => {
   const existing = await strapi.db.query(uid).findMany({
-    select: ["id"],
+    select: ["id", "publishedAt"],
     limit: 1,
   });
 
   if (existing && existing.length > 0) {
-    return strapi.entityService.update(uid, existing[0].id, { data });
+    const [entry] = existing;
+    const payload = entry.publishedAt ? data : withPublishedAt(data);
+    return strapi.entityService.update(uid, entry.id, { data: payload });
   }
 
-  return strapi.entityService.create(uid, { data });
+  return strapi.entityService.create(uid, { data: withPublishedAt(data) });
 };
 
 const seed = async () => {
@@ -249,7 +256,7 @@ const seed = async () => {
       destacados: Array.from(designMap.values()),
     });
 
-    await upsertSingle(strapi, "api::ajustes.ajustes", {
+    await upsertSingle(strapi, "api::ajuste.ajuste", {
       cta_whatsapp: "573001234567",
       colores: { fondo: "#0B0B0C", acento: "#C9A25E" },
       redes: {
