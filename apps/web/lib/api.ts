@@ -2,7 +2,7 @@ import "server-only";
 import qs from "qs";
 import type { Ajustes, Category, Design, HomePage } from "@/types/strapi";
 
-const CMS_URL = process.env.NEXT_PUBLIC_CMS_URL ?? "http://localhost:1337";
+const STRAPI_URL = process.env.NEXT_PUBLIC_STRAPI_URL ?? "http://localhost:1337";
 
 const defaultOptions: RequestInit = {
   next: { revalidate: 120 },
@@ -19,7 +19,7 @@ interface StrapiEntry<T> {
 const absoluteUrl = (url?: string | null) => {
   if (!url) return url ?? "";
   if (url.startsWith("http")) return url;
-  return `${CMS_URL}${url}`;
+  return `${STRAPI_URL}${url}`;
 };
 
 const normalize = <T>(entry: any): T | null => {
@@ -64,7 +64,7 @@ const buildUrl = (path: string, params?: Record<string, any>) => {
   const query = params
     ? qs.stringify(params, { encodeValuesOnly: true })
     : "";
-  const url = new URL(`/api${path}${query ? `?${query}` : ""}`, CMS_URL);
+  const url = new URL(`/api${path}${query ? `?${query}` : ""}`, STRAPI_URL);
   console.log("url: ", url.toString())
   return url.toString();
 };

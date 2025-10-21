@@ -14,7 +14,7 @@ Aplicación web para mostrar el portafolio editorial con estética moderna.
 ### Variables de entorno
 
 ```
-NEXT_PUBLIC_CMS_URL=http://localhost:1337
+NEXT_PUBLIC_STRAPI_URL=http://localhost:1337
 NEXT_PUBLIC_SITE_URL=http://localhost:3000
 NEXT_PUBLIC_WHATSAPP_PHONE=57300XXXXXXX
 NEXT_PUBLIC_CLOUDINARY_CLOUD=tu_cloud_name

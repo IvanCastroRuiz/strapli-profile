@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import qs from "qs";
 
-const CMS_URL = process.env.NEXT_PUBLIC_CMS_URL ?? "http://localhost:1337";
+const STRAPI_URL = process.env.NEXT_PUBLIC_STRAPI_URL ?? "http://localhost:1337";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -26,7 +26,7 @@ export async function GET(request: Request) {
     { encodeValuesOnly: true }
   );
 
-  const url = `${CMS_URL}/api/disenos?${strapiQuery}`;
+  const url = `${STRAPI_URL}/api/disenos?${strapiQuery}`;
   const response = await fetch(url, {
     headers: { "Content-Type": "application/json" },
   });
