@@ -54,10 +54,19 @@ const ensureSingleTypeEntries = async (
     singleTypeUids.map(async (uid) => {
       const existingEntry = await strapi.db
         .query(uid)
-        .findOne({ select: ["id"] });
+        .findOne({ select: ["id", "publishedAt"] });
 
       if (!existingEntry) {
-        await strapi.entityService.create(uid, { data: {} });
+        await strapi.entityService.create(uid, {
+          data: { publishedAt: new Date().toISOString() },
+        });
+        return;
+      }
+
+      if (!existingEntry.publishedAt) {
+        await strapi.entityService.update(uid, existingEntry.id, {
+          data: { publishedAt: new Date().toISOString() },
+        });
       }
     }),
   );
@@ -67,6 +76,9 @@ export default {
   register() {},
   async bootstrap({ strapi }: { strapi: Core.Strapi }) {
     await ensurePublicPermissions(strapi);
-    await ensureSingleTypeEntries(strapi, ["api::home.home"]);
+    await ensureSingleTypeEntries(strapi, [
+      "api::home.home",
+      "api::ajuste.ajuste",
+    ]);
   },
 };
