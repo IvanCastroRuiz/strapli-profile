@@ -1,8 +1,9 @@
 export default {
   rest: {
-    prefix: "/api",
+    prefix: '/api',
     defaultLimit: 25,
     maxLimit: 100,
     withCount: true,
   },
 };
+

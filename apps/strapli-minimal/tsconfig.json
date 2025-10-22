@@ -1,8 +1,11 @@
 {
-  "extends": "@strapi/typescript-utils/tsconfig/server",
+  "extends": "@strapi/typescript-utils/tsconfigs/server",
   "compilerOptions": {
     "rootDir": "./",
-    "outDir": "./dist"
+    "outDir": "./dist",
+    "module": "CommonJS",
+    "moduleResolution": "Node",
+    "target": "ES2022"
   },
   "include": ["src", "config"],
   "exclude": ["node_modules", "build", "dist"]

@@ -2,7 +2,7 @@
   "name": "strapli-minimal",
   "private": true,
   "version": "0.1.0",
-  "type": "module",
+  "type": "commonjs",
   "strapi": {
     "uuid": "f2e5d28e-6c8a-4cb4-93b4-0f95df5bd54a"
   },
@@ -14,7 +14,12 @@
   "dependencies": {
     "@strapi/provider-upload-cloudinary": "^5.0.0",
     "@strapi/strapi": "^5.0.4",
-    "pg": "^8.11.5"
+    "pg": "^8.11.5",
+    "zod": "^3.25.76",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^6.30.1",
+    "styled-components": "^6.1.19"
   },
   "devDependencies": {
     "@strapi/types": "^5.28.0",

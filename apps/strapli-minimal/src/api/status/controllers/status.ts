@@ -1,7 +1,5 @@
-import type { Context } from "@strapi/strapi";
-
 export default {
-  async index(ctx: Context) {
+  async index(ctx) {
     ctx.body = {
       ok: true,
       service: "strapli-minimal",
