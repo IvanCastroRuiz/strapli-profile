@@ -1,6 +1,0 @@
-# Strapi build artifacts
-.build
-.cache
-node_modules
-.env
-exports
