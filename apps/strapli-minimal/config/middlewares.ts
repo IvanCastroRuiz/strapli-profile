@@ -19,6 +19,7 @@ export default [
   'strapi::logger',
   'strapi::query',
   'strapi::body',
+  'strapi::favicon',
   'strapi::session',
   'strapi::public',
 ];
