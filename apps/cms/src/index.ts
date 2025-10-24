@@ -27,7 +27,17 @@ const buildPermissionPayload = (uid: string, actions: string[]) => {
 };
 
 const ensurePublicPermissions = async (strapi: Core.Strapi) => {
-  const roleService = strapi.service("plugin::users-permissions.role");
+  const roleService =
+    (strapi as any).service?.("plugin::users-permissions.role") ??
+    (strapi as any).plugin?.("users-permissions")?.service("role");
+
+  if (!roleService) {
+    (strapi as any).log?.warn?.(
+      "users-permissions plugin not available, skipping public permissions setup.",
+    );
+    return;
+  }
+
   const role = await roleService.findOne(PUBLIC_ROLE_ID);
   if (!role) {
     return;
