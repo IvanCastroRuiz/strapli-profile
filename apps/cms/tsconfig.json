@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "target": "ES2021",
-    "module": "ESNext",
+    "module": "CommonJS",
     "moduleResolution": "Node",
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
@@ -11,10 +11,9 @@
     "rootDir": "./",
     "types": ["node"],
     "resolveJsonModule": true,
-    "allowJs": true,
     "noEmit": true
   },
-  "include": ["./scripts/**/*.ts", "./scripts/**/*.js"],
+  "include": ["./**/*.ts", "./scripts/**/*.js"],
   "files": ["./scripts/seed.js"],
   "exclude": ["node_modules", "build", "dist"]
 }

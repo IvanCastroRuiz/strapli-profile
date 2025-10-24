@@ -1,6 +1,7 @@
 import { join } from 'node:path';
 
-const cloudinaryProviderPath = join(__dirname, 'providers', 'cloudinary');
+const configDirectory = __dirname;
+const cloudinaryProviderPath = join(configDirectory, 'providers', 'cloudinary');
 
 export default ({ env }) => ({
   upload: {

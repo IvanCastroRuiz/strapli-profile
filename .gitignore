@@ -9,3 +9,8 @@ node_modules
 out
 .DS_Store
 coverage
+.strapi/build
+apps/cms/config/**/*.js
+apps/cms/src/**/*.js
+!apps/cms/scripts/seed.js
+!apps/cms/test-cloudinary.js
