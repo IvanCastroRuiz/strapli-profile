@@ -1,45 +1,61 @@
-# CMS — Strapi v5
+# 🚀 Getting started with Strapi
 
-Este proyecto implementa el backend CMS para el portafolio editorial.
+Strapi comes with a full featured [Command Line Interface](https://docs.strapi.io/dev-docs/cli) (CLI) which lets you scaffold and manage your project in seconds.
 
-## Configuración
+### `develop`
 
-1. Copia `.env.example` a `.env` y actualiza las variables si es necesario.
-2. Instala dependencias desde la raíz del monorepo con `pnpm install`.
-3. Ejecuta la base de datos PostgreSQL configurada en las variables de entorno.
-4. Inicia Strapi en modo desarrollo:
-   ```bash
-   pnpm -C apps/cms develop
-   ```
-
-   > **Nota:** La configuración por defecto utiliza PostgreSQL. Si prefieres otro motor soportado por Strapi, ajusta las variables de entorno correspondientes.
-
-### Variables de entorno
+Start your Strapi application with autoReload enabled. [Learn more](https://docs.strapi.io/dev-docs/cli#strapi-develop)
 
 ```
-HOST=0.0.0.0
-PORT=1337
-APP_KEYS=ynH4vbdgIo6+wk4d8qSgGw==,KkghawRnp3HzTnVu52EDog==,4bOzWhj7KfiT+KZ/PCX1Yg==,5bw65BnxpUdzW711DcTO4Q==
-API_TOKEN_SALT=Fzm1aDRVOAFZ8U96j7OiIA==
-ADMIN_JWT_SECRET=cm0OgOwMmk+NJw0QEQNm+w==
-TRANSFER_TOKEN_SALT=kqWgZGTmW6UWIxtU6izYHA==
-ENCRYPTION_KEY=yUGgJPB/Xx7oA5u0F2tNrA==
-STRAPI_LICENSE=T0VDcUF1L040UHNIOElqQWZoZENrT0ordkhaSUJyUC9xSk9IaktEdytQRm5jb00rUUpLdkpkVHlzb2JWNktNcTNZRWpZdDNjc0gwT284bEJaT28vWi9Yd1BuWTRrYUFQeHgxeGl2TGRkTVRZRXV0Y214OWY4Q1hNaFZUeDFlQ1pZOUpqdWEwT3pRSzVLS3JPVi9YekhJbDgyMTJVZkEwdGg3alFHL1IxSmdmWlA3WXZ2dGo0Y1p1ekVCRUpPUG00c2wvNEZzVnBjdlZXS21QaVdXWW1tOFQyVFdldmRwZFVsVHJPelo3R1IzaGEvNUtPNkxDTVdjdTMwb3B6UVdpa3ZRU0UzYUdCUnprTlVuRDRJYXAwNHhiL1NveHNRUjJRR1pzeGRBTnRrNlo1N3ZrNEd0ZzQ5L1VpK3R3NXdLbkR5OVBtcU8vRUl2emZQTWZnREx3cGt3PT0KZXlKMGVYQmxJam9pYzJsc2RtVnlJaXdpWlhod2FYSmxRWFFpT2pFM05qTTNNemN5TnpFd01EQXNJbU4xYzNSdmJXVnlTV1FpT2lJeE5rTkpWak5XTUUxak5WSjZjVmRTSWl3aWMzVmljMk55YVhCMGFXOXVTV1FpT2lKQmVubFplVkpXTUUxamVWQnpjVXRHSWl3aWFYTlVjbWxoYkNJNmRISjFaU3dpY0d4aGJsQnlhV05sU1dRaU9pSm5jbTkzZEdndGMzTnZMV05zYVMxMk1pMVZVMFF0VFc5dWRHaHNlU0lzSW5ObFlYUnpJam94TURBd0xDSm1aV0YwZFhKbGN5STZXM3NpYm1GdFpTSTZJbk56YnlKOUxIc2libUZ0WlNJNkltTnRjeTFoYVNJc0ltOXdkR2x2Ym5NaU9uc2lZM0psWkdsMGMwSmhjMlVpT2pFd0xDSmpjbVZrYVhSelRXRjRWWE5oWjJVaU9qRXdmWDBzZXlKdVlXMWxJam9pWTIxekxXTnZiblJsYm5RdGFHbHpkRzl5ZVNJc0ltOXdkR2x2Ym5NaU9uc2ljbVYwWlc1MGFXOXVSR0Y1Y3lJNk16QjlmU3g3SW01aGJXVWlPaUpqYlhNdFlXUjJZVzVqWldRdGNISmxkbWxsZHlKOUxIc2libUZ0WlNJNkltTnRjeTFqYjI1MFpXNTBMWEpsYkdWaGMyVnpJaXdpYjNCMGFXOXVjeUk2ZXlKdFlYaHBiWFZ0VW1Wc1pXRnpaWE1pT2prNU9UazVPWDE5WFN3aWJHbGpaVzV6WlV0bGVTSTZJbUk0Tm1FNFlUQTNMVGxrWWpVdE5HWmtNQzA0WkRVekxXRm1OMlV4WW1Nd09ETXhNU0o5
-DATABASE_CLIENT=postgres
-DATABASE_HOST=127.0.0.1
-DATABASE_PORT=5432
-DATABASE_NAME=portafolio
-DATABASE_USERNAME=postgres
-DATABASE_PASSWORD=root
-DATABASE_SSL=false
-DATABASE_FILENAME=
-JWT_SECRET=+W9a+/73cWUttQSeAMh1Fw==
-CLOUDINARY_DEFAULT_TRANSFORMATIONS=[]
-CLOUDINARY_NAME=drfppwpaq
-CLOUDINARY_API_KEY=452753935826129
-CLOUDINARY_API_SECRET=lv4u1QsAPcCqn1VbeXuSoA34Z2Y
+npm run develop
+# or
+yarn develop
 ```
 
-### Seeds
+### `start`
 
-Ejecuta `pnpm -C apps/cms seed` para insertar contenido editorial de ejemplo. El script crea categorías, tags, autores y diseños con galerías en Cloudinary.
+Start your Strapi application with autoReload disabled. [Learn more](https://docs.strapi.io/dev-docs/cli#strapi-start)
+
+```
+npm run start
+# or
+yarn start
+```
+
+### `build`
+
+Build your admin panel. [Learn more](https://docs.strapi.io/dev-docs/cli#strapi-build)
+
+```
+npm run build
+# or
+yarn build
+```
+
+## ⚙️ Deployment
+
+Strapi gives you many possible deployment options for your project including [Strapi Cloud](https://cloud.strapi.io). Browse the [deployment section of the documentation](https://docs.strapi.io/dev-docs/deployment) to find the best solution for your use case.
+
+```
+yarn strapi deploy
+```
+
+## 📚 Learn more
+
+- [Resource center](https://strapi.io/resource-center) - Strapi resource center.
+- [Strapi documentation](https://docs.strapi.io) - Official Strapi documentation.
+- [Strapi tutorials](https://strapi.io/tutorials) - List of tutorials made by the core team and the community.
+- [Strapi blog](https://strapi.io/blog) - Official Strapi blog containing articles made by the Strapi team and the community.
+- [Changelog](https://strapi.io/changelog) - Find out about the Strapi product updates, new features and general improvements.
+
+Feel free to check out the [Strapi GitHub repository](https://github.com/strapi/strapi). Your feedback and contributions are welcome!
+
+## ✨ Community
+
+- [Discord](https://discord.strapi.io) - Come chat with the Strapi community including the core team.
+- [Forum](https://forum.strapi.io/) - Place to discuss, ask questions and find answers, show your Strapi project and get feedback or just talk with other Community members.
+- [Awesome Strapi](https://github.com/strapi/awesome-strapi) - A curated list of awesome things related to Strapi.
+
+---
+
+<sub>🤫 Psst! [Strapi is hiring](https://strapi.io/careers).</sub>

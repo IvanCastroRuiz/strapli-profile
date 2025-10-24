@@ -1,318 +1,274 @@
-import { promises as fs } from "node:fs";
-import { tmpdir } from "node:os";
-import { join } from "node:path";
-import { createRequire } from "node:module";
+'use strict';
 
-const require = createRequire(import.meta.url);
-const { createStrapi } = require("@strapi/strapi");
+const fs = require('fs-extra');
+const path = require('path');
+const mime = require('mime-types');
+const { categories, authors, articles, global, about } = require('../data/data.json');
 
-const categories = [
-  { nombre: "Bodas", slug: "bodas", descripcion: "Celebraciones nupciales con una estética moderna y elegante." },
-  { nombre: "Quinceañeros", slug: "quinceaneros", descripcion: "Diseños vibrantes para celebraciones inolvidables de quince años." },
-  { nombre: "Infantiles", slug: "infantiles", descripcion: "Escenarios creativos y llenos de fantasía para los más pequeños." },
-  { nombre: "Escenografías", slug: "escenografias", descripcion: "Montajes inmersivos y de alto impacto visual." }
-];
+async function seedExampleApp() {
+  const shouldImportSeedData = await isFirstRun();
 
-const tags = [
-  { nombre: "Minimalista", slug: "minimalista" },
-  { nombre: "Dorado", slug: "dorado" },
-  { nombre: "Romántico", slug: "romantico" },
-  { nombre: "Nocturno", slug: "nocturno" },
-  { nombre: "Floral", slug: "floral" }
-];
-
-const authors = [
-  { nombre: "Lucía Fernández", slug: "lucia-fernandez", bio: "Directora creativa especializada en estilismo editorial y ambientación de eventos." },
-  { nombre: "Mateo Ríos", slug: "mateo-rios", bio: "Productor visual enfocado en iluminación teatral y puestas en escena modernas." }
-];
-
-const galleries = {
-  "bodas-alba-luz": [
-    "portfolio/bodas_alba_luz_1",
-    "portfolio/bodas_alba_luz_2",
-    "portfolio/bodas_alba_luz_3",
-    "portfolio/bodas_alba_luz_4"
-  ],
-  "quince-sophia": [
-    "portfolio/quince_sophia_1",
-    "portfolio/quince_sophia_2",
-    "portfolio/quince_sophia_3",
-    "portfolio/quince_sophia_4"
-  ],
-  "infantil-galaxia": [
-    "portfolio/infantil_galaxia_1",
-    "portfolio/infantil_galaxia_2",
-    "portfolio/infantil_galaxia_3",
-    "portfolio/infantil_galaxia_4"
-  ],
-  "escena-aurum": [
-    "portfolio/escena_aurum_1",
-    "portfolio/escena_aurum_2",
-    "portfolio/escena_aurum_3",
-    "portfolio/escena_aurum_4"
-  ]
-};
-
-const designs = [
-  {
-    titulo: "Bodas Alba & Luz",
-    slug: "bodas-alba-luz",
-    descripcion: "Una experiencia ceremonial íntima con acentos dorados y texturas táctiles.",
-    categoria: "bodas",
-    tags: ["minimalista", "dorado", "romantico"],
-    autor: "lucia-fernandez",
-    fecha_publicacion: "2023-05-12",
-    destacado: true,
-    heroPublicId: "portfolio/bodas_alba_luz_1"
-  },
-  {
-    titulo: "Quince Sofía Aurea",
-    slug: "quince-sophia",
-    descripcion: "Una fiesta vibrante en tonos ámbar con iluminación dramática.",
-    categoria: "quinceaneros",
-    tags: ["dorado", "nocturno"],
-    autor: "mateo-rios",
-    fecha_publicacion: "2023-08-02",
-    destacado: true,
-    heroPublicId: "portfolio/quince_sophia_1"
-  },
-  {
-    titulo: "Infantil Galaxia Lúcida",
-    slug: "infantil-galaxia",
-    descripcion: "Escenografía espacial con elementos interactivos y neones sutiles.",
-    categoria: "infantiles",
-    tags: ["floral", "nocturno"],
-    autor: "lucia-fernandez",
-    fecha_publicacion: "2024-01-18",
-    destacado: false,
-    heroPublicId: "portfolio/infantil_galaxia_1"
-  },
-  {
-    titulo: "Escena Aurum",
-    slug: "escena-aurum",
-    descripcion: "Montaje conceptual para editorial de moda con contrastes de luz y sombra.",
-    categoria: "escenografias",
-    tags: ["minimalista", "dorado"],
-    autor: "mateo-rios",
-    fecha_publicacion: "2024-03-21",
-    destacado: true,
-    heroPublicId: "portfolio/escena_aurum_1"
-  }
-];
-
-const cloudinaryBase = (publicId) =>
-  `https://res.cloudinary.com/${process.env.CLOUDINARY_NAME}/image/upload/q_80,w_1600/${publicId}.avif`;
-
-const uploadFromCloudinary = async (strapi, publicId) => {
-  const url = cloudinaryBase(publicId);
-  const response = await fetch(url);
-  if (!response.ok) {
-    throw new Error(`No se pudo descargar la imagen ${url}`);
-  }
-
-  // Infer mime/extension from response or URL
-  const contentType = response.headers.get("content-type") || "application/octet-stream";
-  const urlExt = (() => {
-    const afterDot = url.split(".").pop() || "";
-    return afterDot.split("?")[0].toLowerCase();
-  })();
-  const extFromType = (type) => {
-    if (type.includes("image/jpeg")) return "jpg";
-    if (type.includes("image/png")) return "png";
-    if (type.includes("image/webp")) return "webp";
-    if (type.includes("image/avif")) return "avif";
-    return urlExt || "bin";
-  };
-
-  const extension = extFromType(contentType);
-  const baseName = publicId.split("/").pop();
-  const filename = `${baseName}.${extension}`;
-
-  const arrayBuffer = await response.arrayBuffer();
-  const buffer = Buffer.from(arrayBuffer);
-  const tempFilePath = join(tmpdir(), `${Date.now()}-${filename}`);
-
-  const uploadService = strapi.plugin("upload").service("upload");
-  await fs.writeFile(tempFilePath, buffer);
-
-  try {
-    const [file] = await uploadService.upload({
-      data: { folder: "portfolio" },
-      files: {
-        // Strapi v5 expects these field names
-        filepath: tempFilePath,
-        originalFilename: filename,
-        mimetype: contentType,
-        size: buffer.byteLength,
-      },
-    });
-
-    return file.id;
-  } finally {
-    await fs.unlink(tempFilePath).catch(() => {});
-  }
-};
-
-const publishDocumentIfNeeded = async (strapi, uid, entry) => {
-  const contentType = strapi.contentType(uid);
-  if (!contentType?.options?.draftAndPublish) {
-    return entry;
-  }
-
-  const ensureDocumentIdentity = async (record) => {
-    if (record?.documentId && typeof record.publishedAt !== "undefined") {
-      return record;
+  if (shouldImportSeedData) {
+    try {
+      console.log('Setting up the template...');
+      await importSeedData();
+      console.log('Ready to go');
+    } catch (error) {
+      console.log('Could not import seed data');
+      console.error(error);
     }
-
-    if (!record?.id) {
-      return record ?? null;
-    }
-
-    return strapi.db.query(uid).findOne({
-      select: ["id", "documentId", "publishedAt"],
-      where: { id: record.id },
-    });
-  };
-
-  const baseEntry = await ensureDocumentIdentity(entry);
-  if (!baseEntry) {
-    return entry;
+  } else {
+    console.log(
+      'Seed data has already been imported. We cannot reimport unless you clear your database first.'
+    );
   }
+}
 
-  if (baseEntry.publishedAt) {
-    return baseEntry;
-  }
+async function isFirstRun() {
+  const pluginStore = strapi.store({
+    environment: strapi.config.environment,
+    type: 'type',
+    name: 'setup',
+  });
+  const initHasRun = await pluginStore.get({ key: 'initHasRun' });
+  await pluginStore.set({ key: 'initHasRun', value: true });
+  return !initHasRun;
+}
 
-  const result = await strapi.documents(uid).publish({
-    documentId: baseEntry.documentId,
+async function setPublicPermissions(newPermissions) {
+  // Find the ID of the public role
+  const publicRole = await strapi.query('plugin::users-permissions.role').findOne({
+    where: {
+      type: 'public',
+    },
   });
 
-  return result.entries?.[0] ?? baseEntry;
-};
-
-const upsertCollectionEntry = async (strapi, uid, slug, data) => {
-  const existing = await strapi.db.query(uid).findOne({
-    where: { slug },
-    select: ["id", "documentId", "publishedAt"],
-  });
-
-  if (existing) {
-    await strapi.entityService.update(uid, existing.id, { data });
-    const published = await publishDocumentIfNeeded(strapi, uid, existing);
-    return published?.id ?? existing.id;
-  }
-
-  const created = await strapi.entityService.create(uid, { data });
-  const published = await publishDocumentIfNeeded(strapi, uid, created);
-  return published?.id ?? created.id;
-};
-
-const withPublishedAt = (entry = {}) => ({
-  publishedAt: new Date().toISOString(),
-  ...entry,
-});
-
-const upsertSingle = async (strapi, uid, data) => {
-  const existing = await strapi.db.query(uid).findOne({
-    select: ["id", "documentId", "publishedAt"],
-  });
-
-  if (existing) {
-    await strapi.entityService.update(uid, existing.id, { data });
-    return publishDocumentIfNeeded(strapi, uid, existing);
-  }
-
-  const created = await strapi.entityService.create(uid, { data });
-  return publishDocumentIfNeeded(strapi, uid, created);
-};
-
-const seed = async () => {
-  const strapi = await createStrapi();
-  await strapi.start();
-
-  try {
-    const categoryMap = new Map();
-    for (const category of categories) {
-      const id = await upsertCollectionEntry(strapi, "api::categoria.categoria", category.slug, category);
-      categoryMap.set(category.slug, id);
-    }
-
-    const tagMap = new Map();
-    for (const tag of tags) {
-      const id = await upsertCollectionEntry(strapi, "api::tag.tag", tag.slug, tag);
-      tagMap.set(tag.slug, id);
-    }
-
-    const authorMap = new Map();
-    for (const author of authors) {
-      const id = await upsertCollectionEntry(strapi, "api::autor.autor", author.slug, {
-        nombre: author.nombre,
-        slug: author.slug,
-        bio: author.bio,
-      });
-      authorMap.set(author.slug, id);
-    }
-
-    const designMap = new Map();
-    for (const design of designs) {
-      const existing = await strapi.db.query("api::diseno.diseno").findOne({
-        where: { slug: design.slug },
-        select: ["id", "documentId", "publishedAt"],
-      });
-
-      if (existing) {
-        const published = await publishDocumentIfNeeded(strapi, "api::diseno.diseno", existing);
-        designMap.set(design.slug, published?.id ?? existing.id);
-        continue;
-      }
-
-      const galleryIds = [];
-      for (const publicId of galleries[design.slug]) {
-        const mediaId = await uploadFromCloudinary(strapi, publicId);
-        galleryIds.push(mediaId);
-      }
-
-      const entity = await strapi.entityService.create("api::diseno.diseno", {
+  // Create the new permissions and link them to the public role
+  const allPermissionsToCreate = [];
+  Object.keys(newPermissions).map((controller) => {
+    const actions = newPermissions[controller];
+    const permissionsToCreate = actions.map((action) => {
+      return strapi.query('plugin::users-permissions.permission').create({
         data: {
-          titulo: design.titulo,
-          slug: design.slug,
-          descripcion: design.descripcion,
-          fecha_publicacion: design.fecha_publicacion,
-          destacado: design.destacado,
-          categoria: categoryMap.get(design.categoria),
-          autor: authorMap.get(design.autor),
-          tags: design.tags.map((tagSlug) => tagMap.get(tagSlug)),
-          galeria: galleryIds,
-          metadata: {
-            hero: design.heroPublicId,
-          },
+          action: `api::${controller}.${controller}.${action}`,
+          role: publicRole.id,
         },
       });
-
-      const published = await publishDocumentIfNeeded(strapi, "api::diseno.diseno", entity);
-      designMap.set(design.slug, published?.id ?? entity.id);
-    }
-
-    await upsertSingle(strapi, "api::home.home", {
-      destacados: Array.from(designMap.values()),
     });
+    allPermissionsToCreate.push(...permissionsToCreate);
+  });
+  await Promise.all(allPermissionsToCreate);
+}
 
-    await upsertSingle(strapi, "api::ajuste.ajuste", {
-      cta_whatsapp: "573001234567",
-      colores: { fondo: "#0B0B0C", acento: "#C9A25E" },
-      redes: {
-        instagram: "https://instagram.com/estudioeditorial",
-        pinterest: "https://pinterest.com/estudioeditorial",
+function getFileSizeInBytes(filePath) {
+  const stats = fs.statSync(filePath);
+  const fileSizeInBytes = stats['size'];
+  return fileSizeInBytes;
+}
+
+function getFileData(fileName) {
+  const filePath = path.join('data', 'uploads', fileName);
+  // Parse the file metadata
+  const size = getFileSizeInBytes(filePath);
+  const ext = fileName.split('.').pop();
+  const mimeType = mime.lookup(ext || '') || '';
+
+  return {
+    filepath: filePath,
+    originalFileName: fileName,
+    size,
+    mimetype: mimeType,
+  };
+}
+
+async function uploadFile(file, name) {
+  return strapi
+    .plugin('upload')
+    .service('upload')
+    .upload({
+      files: file,
+      data: {
+        fileInfo: {
+          alternativeText: `An image uploaded to Strapi called ${name}`,
+          caption: name,
+          name,
+        },
+      },
+    });
+}
+
+// Create an entry and attach files if there are any
+async function createEntry({ model, entry }) {
+  try {
+    // Actually create the entry in Strapi
+    await strapi.documents(`api::${model}.${model}`).create({
+      data: entry,
+    });
+  } catch (error) {
+    console.error({ model, entry, error });
+  }
+}
+
+async function checkFileExistsBeforeUpload(files) {
+  const existingFiles = [];
+  const uploadedFiles = [];
+  const filesCopy = [...files];
+
+  for (const fileName of filesCopy) {
+    // Check if the file already exists in Strapi
+    const fileWhereName = await strapi.query('plugin::upload.file').findOne({
+      where: {
+        name: fileName.replace(/\..*$/, ''),
       },
     });
 
-    console.log("Seeds ejecutados correctamente");
-  } catch (error) {
-    console.error(error);
+    if (fileWhereName) {
+      // File exists, don't upload it
+      existingFiles.push(fileWhereName);
+    } else {
+      // File doesn't exist, upload it
+      const fileData = getFileData(fileName);
+      const fileNameNoExtension = fileName.split('.').shift();
+      const [file] = await uploadFile(fileData, fileNameNoExtension);
+      uploadedFiles.push(file);
+    }
+  }
+  const allFiles = [...existingFiles, ...uploadedFiles];
+  // If only one file then return only that file
+  return allFiles.length === 1 ? allFiles[0] : allFiles;
+}
+
+async function updateBlocks(blocks) {
+  const updatedBlocks = [];
+  for (const block of blocks) {
+    if (block.__component === 'shared.media') {
+      const uploadedFiles = await checkFileExistsBeforeUpload([block.file]);
+      // Copy the block to not mutate directly
+      const blockCopy = { ...block };
+      // Replace the file name on the block with the actual file
+      blockCopy.file = uploadedFiles;
+      updatedBlocks.push(blockCopy);
+    } else if (block.__component === 'shared.slider') {
+      // Get files already uploaded to Strapi or upload new files
+      const existingAndUploadedFiles = await checkFileExistsBeforeUpload(block.files);
+      // Copy the block to not mutate directly
+      const blockCopy = { ...block };
+      // Replace the file names on the block with the actual files
+      blockCopy.files = existingAndUploadedFiles;
+      // Push the updated block
+      updatedBlocks.push(blockCopy);
+    } else {
+      // Just push the block as is
+      updatedBlocks.push(block);
+    }
   }
 
-  await strapi.destroy();
-};
+  return updatedBlocks;
+}
 
-seed();
+async function importArticles() {
+  for (const article of articles) {
+    const cover = await checkFileExistsBeforeUpload([`${article.slug}.jpg`]);
+    const updatedBlocks = await updateBlocks(article.blocks);
 
+    await createEntry({
+      model: 'article',
+      entry: {
+        ...article,
+        cover,
+        blocks: updatedBlocks,
+        // Make sure it's not a draft
+        publishedAt: Date.now(),
+      },
+    });
+  }
+}
+
+async function importGlobal() {
+  const favicon = await checkFileExistsBeforeUpload(['favicon.png']);
+  const shareImage = await checkFileExistsBeforeUpload(['default-image.png']);
+  return createEntry({
+    model: 'global',
+    entry: {
+      ...global,
+      favicon,
+      // Make sure it's not a draft
+      publishedAt: Date.now(),
+      defaultSeo: {
+        ...global.defaultSeo,
+        shareImage,
+      },
+    },
+  });
+}
+
+async function importAbout() {
+  const updatedBlocks = await updateBlocks(about.blocks);
+
+  await createEntry({
+    model: 'about',
+    entry: {
+      ...about,
+      blocks: updatedBlocks,
+      // Make sure it's not a draft
+      publishedAt: Date.now(),
+    },
+  });
+}
+
+async function importCategories() {
+  for (const category of categories) {
+    await createEntry({ model: 'category', entry: category });
+  }
+}
+
+async function importAuthors() {
+  for (const author of authors) {
+    const avatar = await checkFileExistsBeforeUpload([author.avatar]);
+
+    await createEntry({
+      model: 'author',
+      entry: {
+        ...author,
+        avatar,
+      },
+    });
+  }
+}
+
+async function importSeedData() {
+  // Allow read of application content types
+  await setPublicPermissions({
+    article: ['find', 'findOne'],
+    category: ['find', 'findOne'],
+    author: ['find', 'findOne'],
+    global: ['find', 'findOne'],
+    about: ['find', 'findOne'],
+  });
+
+  // Create all entries
+  await importCategories();
+  await importAuthors();
+  await importArticles();
+  await importGlobal();
+  await importAbout();
+}
+
+async function main() {
+  const { createStrapi, compileStrapi } = require('@strapi/strapi');
+
+  const appContext = await compileStrapi();
+  const app = await createStrapi(appContext).load();
+
+  app.log.level = 'error';
+
+  await seedExampleApp();
+  await app.destroy();
+
+  process.exit(0);
+}
+
+main().catch((error) => {
+  console.error(error);
+  process.exit(1);
+});

@@ -1,33 +1,44 @@
 {
   "name": "cms",
+  "version": "0.1.0",
   "private": true,
-  "version": "1.0.0",
-  "type": "module",
-  "strapi": {
-    "uuid": "3e2f5fa5-1e23-4b55-9d4d-6b88a25b9d0d"
-  },
+  "description": "A Strapi application",
   "scripts": {
-    "develop": "node --import tsx/esm --experimental-specifier-resolution=node ./node_modules/@strapi/strapi/bin/strapi.js develop",
-    "build": "node --import tsx/esm --experimental-specifier-resolution=node ./node_modules/@strapi/strapi/bin/strapi.js build",
-    "start": "node --import tsx/esm --experimental-specifier-resolution=node ./node_modules/@strapi/strapi/bin/strapi.js start",
-    "seed": "node --experimental-specifier-resolution=node ./scripts/seed.js"
+    "build": "strapi build",
+    "console": "strapi console",
+    "deploy": "strapi deploy",
+    "dev": "strapi develop",
+    "develop": "strapi develop",
+    "seed:example": "node ./scripts/seed.js",
+    "start": "strapi start",
+    "strapi": "strapi",
+    "upgrade": "npx @strapi/upgrade latest",
+    "upgrade:dry": "npx @strapi/upgrade latest --dry"
   },
   "dependencies": {
-    "@strapi/plugin-graphql": "^5.0.4",
-    "@strapi/plugin-seo": "^2.0.8",
-    "@strapi/provider-upload-cloudinary": "^5.0.0",
-    "@strapi/strapi": "^5.0.4",
-    "pg": "^8.11.5",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "react-router-dom": "^6.30.1",
-    "styled-components": "^6.1.19"
+    "@strapi/plugin-cloud": "5.29.0",
+    "@strapi/plugin-users-permissions": "5.29.0",
+    "@strapi/strapi": "5.29.0",
+    "fs-extra": "^10.0.0",
+    "mime-types": "^2.1.27",
+    "pg": "8.8.0",
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0",
+    "react-router-dom": "^6.0.0",
+    "styled-components": "^6.0.0"
   },
   "devDependencies": {
-    "@strapi/types": "^5.28.0",
-    "@types/node": "20.11.30",
-    "ts-node": "10.9.2",
-    "tsx": "^4.20.6",
-    "typescript": "5.3.3"
+    "@types/node": "^20",
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
+    "typescript": "^5"
+  },
+  "engines": {
+    "node": ">=18.0.0 <=22.x.x",
+    "npm": ">=6.0.0"
+  },
+  "strapi": {
+    "uuid": "2e2b5bb6-dc52-43a5-a56f-0932ed15b319",
+    "installId": "f9d926b75216ded214444d6d8a3deb7c0bdcacca58cca7a070cd7c9b5dceb5fa"
   }
 }
