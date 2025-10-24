@@ -1,34 +1,8 @@
-import crypto from 'node:crypto';
-import type { Readable } from 'node:stream';
+const crypto = require('node:crypto');
 
-type CloudinaryProviderOptions = {
-  cloud_name: string;
-  api_key: string;
-  api_secret: string;
-  default_transformations?: unknown;
-};
-
-type ProviderMetadata = {
-  public_id?: string;
-  resource_type?: string;
-  [key: string]: unknown;
-};
-
-type UploadFile = {
-  name?: string;
-  hash: string;
-  ext?: string | null;
-  mime: string;
-  buffer?: Buffer;
-  stream?: Readable;
-  url?: string | null;
-  provider_metadata?: ProviderMetadata | null;
-  [key: string]: unknown;
-};
-
-const streamToBuffer = async (stream: Readable): Promise<Buffer> =>
+const streamToBuffer = async (stream) =>
   new Promise((resolve, reject) => {
-    const chunks: Buffer[] = [];
+    const chunks = [];
 
     stream.on('data', (chunk) => {
       chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
@@ -37,7 +11,7 @@ const streamToBuffer = async (stream: Readable): Promise<Buffer> =>
     stream.on('end', () => resolve(Buffer.concat(chunks)));
   });
 
-const ensureFileBuffer = async (file: UploadFile): Promise<Buffer> => {
+const ensureFileBuffer = async (file) => {
   if (file.buffer) {
     return file.buffer;
   }
@@ -51,10 +25,7 @@ const ensureFileBuffer = async (file: UploadFile): Promise<Buffer> => {
   return buffer;
 };
 
-const createSignature = (
-  params: Record<string, string | number | boolean | undefined>,
-  apiSecret: string,
-): string => {
+const createSignature = (params, apiSecret) => {
   const serialized = Object.entries(params)
     .filter(([, value]) => value !== undefined && value !== null && value !== '')
     .sort(([left], [right]) => left.localeCompare(right))
@@ -64,7 +35,7 @@ const createSignature = (
   return crypto.createHash('sha1').update(`${serialized}${apiSecret}`).digest('hex');
 };
 
-const normaliseTransformations = (value: unknown): string | undefined => {
+const normaliseTransformations = (value) => {
   if (!value) {
     return undefined;
   }
@@ -85,16 +56,16 @@ const normaliseTransformations = (value: unknown): string | undefined => {
   }
 };
 
-const buildPublicId = (file: UploadFile): string => {
-  if (file.provider_metadata?.public_id) {
+const buildPublicId = (file) => {
+  if (file.provider_metadata && file.provider_metadata.public_id) {
     return file.provider_metadata.public_id;
   }
 
   return file.hash;
 };
 
-const toErrorMessage = (response: { status: number; statusText: string; ok: boolean }, payload: any): string => {
-  if (payload?.error?.message) {
+const toErrorMessage = (response, payload) => {
+  if (payload && payload.error && payload.error.message) {
     return payload.error.message;
   }
 
@@ -105,8 +76,8 @@ const toErrorMessage = (response: { status: number; statusText: string; ok: bool
   return 'Unknown Cloudinary error';
 };
 
-const request = async <T>(url: string, body: URLSearchParams): Promise<T> => {
-  let response: any;
+const request = async (url, body) => {
+  let response;
 
   try {
     response = await fetch(url, { method: 'POST', body });
@@ -115,36 +86,41 @@ const request = async <T>(url: string, body: URLSearchParams): Promise<T> => {
     throw new Error(`Cloudinary request failed: ${message}`);
   }
 
-  let payload: any;
+  let payload;
   try {
     payload = await response.json();
   } catch (error) {
     payload = undefined;
   }
 
-  if (!response.ok || payload?.error) {
+  if (!response.ok || (payload && payload.error)) {
     throw new Error(`Cloudinary request failed: ${toErrorMessage(response, payload)}`);
   }
 
-  return payload as T;
+  return payload;
 };
 
-const createCloudinaryProvider = (options: CloudinaryProviderOptions) => {
-  const { cloud_name: cloudName, api_key: apiKey, api_secret: apiSecret, default_transformations } = options;
+const createCloudinaryProvider = (options = {}) => {
+  const {
+    cloud_name: cloudName,
+    api_key: apiKey,
+    api_secret: apiSecret,
+    default_transformations: defaultTransformations,
+  } = options;
 
   if (!cloudName || !apiKey || !apiSecret) {
     throw new Error('Cloudinary upload provider is missing required credentials.');
   }
 
   const baseUrl = `https://api.cloudinary.com/v1_1/${cloudName}`;
-  const transformations = normaliseTransformations(default_transformations);
+  const transformations = normaliseTransformations(defaultTransformations);
 
-  const upload = async (file: UploadFile) => {
+  const upload = async (file) => {
     const buffer = await ensureFileBuffer(file);
     const timestamp = Math.floor(Date.now() / 1000);
     const publicId = buildPublicId(file);
 
-    const signatureParams: Record<string, string> = {
+    const signatureParams = {
       public_id: publicId,
       timestamp: timestamp.toString(),
     };
@@ -167,17 +143,11 @@ const createCloudinaryProvider = (options: CloudinaryProviderOptions) => {
       body.append('transformation', transformations);
     }
 
-    const result = await request<{
-      secure_url?: string;
-      url?: string;
-      public_id: string;
-      resource_type: string;
-      [key: string]: unknown;
-    }>(`${baseUrl}/auto/upload`, body);
+    const result = await request(`${baseUrl}/auto/upload`, body);
 
     file.url = result.secure_url ?? result.url ?? null;
     file.provider_metadata = {
-      ...(file.provider_metadata ?? {}),
+      ...(file.provider_metadata || {}),
       public_id: result.public_id,
       resource_type: result.resource_type,
     };
@@ -188,7 +158,7 @@ const createCloudinaryProvider = (options: CloudinaryProviderOptions) => {
   return {
     upload,
     uploadStream: upload,
-    delete: async (file: UploadFile) => {
+    delete: async (file) => {
       const publicId = file.provider_metadata?.public_id ?? file.hash;
       if (!publicId) {
         throw new Error('Cloudinary delete failed: missing file public_id.');
@@ -210,10 +180,6 @@ const createCloudinaryProvider = (options: CloudinaryProviderOptions) => {
   };
 };
 
-const cloudinaryProvider = {
+module.exports = {
   init: createCloudinaryProvider,
 };
-
-export default cloudinaryProvider;
-
-module.exports = cloudinaryProvider;

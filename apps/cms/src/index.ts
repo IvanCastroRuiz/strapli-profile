@@ -1,6 +1,6 @@
 import type { Core } from "@strapi/strapi";
 
-const PUBLIC_ROLE_ID = 1;
+const PUBLIC_ROLE_TYPE = "public";
 
 const publicPermissions: Record<string, string[]> = {
   "api::categoria.categoria": ["find", "findOne"],
@@ -11,49 +11,70 @@ const publicPermissions: Record<string, string[]> = {
   "api::autor.autor": ["find", "findOne"],
 };
 
-const buildPermissionPayload = (uid: string, actions: string[]) => {
-  const parts = uid.split(".");
-  const name = parts[parts.length - 1];
-  return {
-    [uid]: {
-      controllers: {
-        [name]: actions.reduce<Record<string, boolean>>((acc, action) => {
-          acc[action] = true;
-          return acc;
-        }, {}),
-      },
-    },
-  };
-};
-
 const ensurePublicPermissions = async (strapi: Core.Strapi) => {
-  const roleService =
-    (strapi as any).service?.("plugin::users-permissions.role") ??
-    (strapi as any).plugin?.("users-permissions")?.service("role");
-
-  if (!roleService) {
+  const usersPermissionsPlugin = (strapi as any).plugin?.("users-permissions");
+  if (!usersPermissionsPlugin) {
     (strapi as any).log?.warn?.(
       "users-permissions plugin not available, skipping public permissions setup.",
     );
     return;
   }
 
-  const role = await roleService.findOne(PUBLIC_ROLE_ID);
+  const role = await strapi.db
+    .query("plugin::users-permissions.role")
+    .findOne({
+      select: ["id"],
+      where: { type: PUBLIC_ROLE_TYPE },
+    });
+
   if (!role) {
+    (strapi as any).log?.warn?.(
+      `Unable to locate \"${PUBLIC_ROLE_TYPE}\" role; skipping public permissions setup.`,
+    );
     return;
   }
 
-  const permissions = Object.entries(publicPermissions).reduce(
-    (acc, [uid, actions]) => ({
-      ...acc,
-      ...buildPermissionPayload(uid, actions),
-    }),
-    {}
-  );
+  await Promise.all(
+    Object.entries(publicPermissions).map(async ([uid, actions]) => {
+      await Promise.all(
+        actions.map(async (action) => {
+          const permissionAction = `${uid}.${action}`;
 
-  await roleService.updateRole(PUBLIC_ROLE_ID, {
-    permissions,
-  });
+          const existingPermission = await strapi.db
+            .query("plugin::users-permissions.permission")
+            .findOne({
+              select: ["id", "enabled"],
+              where: {
+                action: permissionAction,
+                role: role.id,
+              },
+            });
+
+          if (existingPermission) {
+            if (!existingPermission.enabled) {
+              await strapi.db
+                .query("plugin::users-permissions.permission")
+                .update({
+                  where: { id: existingPermission.id },
+                  data: { enabled: true },
+                });
+            }
+            return;
+          }
+
+          await strapi.db
+            .query("plugin::users-permissions.permission")
+            .create({
+              data: {
+                action: permissionAction,
+                role: role.id,
+                enabled: true,
+              },
+            });
+        })
+      );
+    })
+  );
 };
 
 const ensureSingleTypeEntries = async (
